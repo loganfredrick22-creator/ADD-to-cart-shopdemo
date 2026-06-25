@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add to Cart — Demo</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #242424;
+      --border: #2e2e2e;
+      --accent: #f97316;
+      --accent-dim: rgba(249,115,22,0.12);
+      --text: #f0f0f0;
+      --muted: #888;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+    /* NAV */
+    .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 0; }
+    .navbar-brand { font-weight: 700; font-size: 1.2rem; color: var(--text) !important; letter-spacing: -0.5px; }
+    .navbar-brand span { color: var(--accent); }
+
+    .cart-btn {
+      position: relative;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .cart-btn:hover { background: var(--accent); color: #fff; }
+    .cart-count {
+      position: absolute;
+      top: -7px; right: -7px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      width: 20px; height: 20px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s;
+    }
+    .cart-count.pop { transform: scale(1.4); }
+
+    /* PRODUCTS */
+    .section-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+    .section-sub { color: var(--muted); font-size: 0.875rem; margin-bottom: 28px; }
+
+    .product-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+      height: 100%;
+    }
+    .product-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+
+    .product-img {
+      width: 100%; aspect-ratio: 4/3;
+      background: var(--surface2);
+    }
+    .product-img img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+
+    .product-body { padding: 16px; }
+    .product-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; }
+    .product-desc { color: var(--muted); font-size: 0.8rem; margin-bottom: 12px; line-height: 1.5; }
+    .product-price { font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-bottom: 14px; }
+
+    .qty-control {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    }
+    .qty-btn {
+      width: 30px; height: 30px; border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 1rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.15s;
+    }
+    .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .qty-display { min-width: 28px; text-align: center; font-weight: 600; font-size: 0.95rem; }
+
+    .add-btn {
+      width: 100%;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 9px 0;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .add-btn:hover { opacity: 0.88; transform: scale(0.98); }
+    .add-btn.added { background: #22c55e; }
+
+    /* CART OFFCANVAS */
+    .offcanvas { background: var(--surface); color: var(--text); border-left: 1px solid var(--border) !important; }
+    .offcanvas-header { border-bottom: 1px solid var(--border); }
+    .offcanvas-title { font-weight: 700; }
+    .btn-close { filter: invert(1); }
+
+    .cart-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .cart-item-image { min-width: 48px; text-align: center; }
+    .cart-item-image img {
+      width: 48px; height: 48px; object-fit: cover; border-radius: 6px;
+    }
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-weight: 600; font-size: 0.9rem; }
+    .cart-item-price { color: var(--accent); font-weight: 700; font-size: 0.875rem; }
+    .cart-item-qty { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+
+    .remove-btn {
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; padding: 4px; border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .remove-btn:hover { color: #ef4444; }
+
+    .cart-empty { text-align: center; padding: 48px 0; color: var(--muted); }
+    .cart-empty i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+
+    .cart-footer { border-top: 1px solid var(--border); padding-top: 16px; margin-top: auto; }
+    .cart-total { font-size: 1.1rem; font-weight: 700; }
+    .checkout-btn {
+      width: 100%; background: var(--accent); border: none; color: #fff;
+      border-radius: 8px; padding: 12px; font-weight: 700;
+      cursor: pointer; margin-top: 12px; transition: opacity 0.2s;
+    }
+    .checkout-btn:hover { opacity: 0.85; }
+
+    /* Toast */
+    .toast-container { z-index: 9999; }
+    .toast { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+    .toast-body { font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="container d-flex justify-content-between align-items-center">
+    <span class="navbar-brand"><span>●</span> ShopDemo</span>
+    <button class="cart-btn" data-bs-toggle="offcanvas" data-bs-target="#cartCanvas">
+      <i class="bi bi-bag me-1"></i> Cart
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- PRODUCTS -->
+<div class="container py-5">
+  <div class="section-title">Featured Products</div>
+  <p class="section-sub">Click + to adjust quantity, then add to cart.</p>
+
+  <div class="row g-4" id="productGrid"></div>
+</div>
+
+<!-- CART OFFCANVAS -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cartCanvas">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title"><i class="bi bi-bag me-2"></i>Your Cart</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <div id="cartItems" class="flex-grow-1 overflow-auto"></div>
+    <div class="cart-footer" id="cartFooter" style="display:none!important">
+      <div class="d-flex justify-content-between cart-total">
+        <span>Total</span>
+        <span id="cartTotal">KES 0</span>
+      </div>
+      <button class="checkout-btn" onclick="checkout()">Checkout <i class="bi bi-arrow-right"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="addToast" class="toast align-items-center" role="alert">
+    <div class="d-flex">
+      <div class="toast-body" id="toastMsg">Added to cart!</div>
+      <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" style="filter:invert(1)"></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // ── PRODUCT DATA ──────────────────────────────────────────────
+  const products = [
+    { id: 1, name: "Air Max Nairobi",    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop", price: 8500,  desc: "Lightweight everyday runner. Mesh upper, responsive sole." },
+    { id: 2, name: "Urban Hoodie",       image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=300&fit=crop", price: 3200,  desc: "400gsm fleece. Kangaroo pocket, oversized fit." },
+    { id: 3, name: "Cargo Shorts",       image: "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400&h=300&fit=crop", price: 2100,  desc: "6-pocket tactical cargo. Ripstop cotton blend." },
+    { id: 4, name: "Tech Cap",           image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=400&h=300&fit=crop", price: 950,   desc: "Structured 6-panel. Reflective brim strip." },
+    { id: 5, name: "Crossbody Bag",      image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop", price: 4400,  desc: "Waterproof nylon. 3 compartments, USB pass-through." },
+    { id: 6, name: "Sport Socks 3-Pack", image: "https://images.unsplash.com/photo-1586401100295-7a8097fd2943?w=400&h=300&fit=crop", price: 750,   desc: "Cushioned heel & toe. Moisture-wicking cotton." },
+  ];
+
+  // ── STATE ─────────────────────────────────────────────────────
+  let cart = {};          // { productId: { product, qty } }
+  let quantities = {};    // per-card qty selector state
+
+  products.forEach(p => { quantities[p.id] = 1; });
+
+  // ── RENDER PRODUCTS ───────────────────────────────────────────
+  function renderProducts() {
+    const grid = document.getElementById('productGrid');
+    grid.innerHTML = products.map(p => `
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="product-card">
+          <div class="product-img"><img src="${p.image}" alt="${p.name}"></div>
+          <div class="product-body">
+            <div class="product-name">${p.name}</div>
+            <div class="product-desc">${p.desc}</div>
+            <div class="product-price">KES ${p.price.toLocaleString()}</div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
+              <span class="qty-display" id="qty-${p.id}">1</span>
+              <button class="qty-btn" onclick="changeQty(${p.id}, +1)">+</button>
+            </div>
+            <button class="add-btn" id="btn-${p.id}" onclick="addToCart(${p.id})">
+              <i class="bi bi-bag-plus"></i> Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ── QTY SELECTOR ─────────────────────────────────────────────
+  function changeQty(id, delta) {
+    quantities[id] = Math.max(1, (quantities[id] || 1) + delta);
+    document.getElementById(`qty-${id}`).textContent = quantities[id];
+  }
+
+  // ── ADD TO CART ───────────────────────────────────────────────
+  function addToCart(id) {
+    const product = products.find(p => p.id === id);
+    const qty = quantities[id] || 1;
+
+    if (cart[id]) {
+      cart[id].qty += qty;
+    } else {
+      cart[id] = { product, qty };
+    }
+
+    // Reset card qty
+    quantities[id] = 1;
+    document.getElementById(`qty-${id}`).textContent = 1;
+
+    // Flash button green
+    const btn = document.getElementById(`btn-${id}`);
+    btn.classList.add('added');
+    btn.innerHTML = `<i class="bi bi-check2"></i> Added!`;
+    setTimeout(() => {
+      btn.classList.remove('added');
+      btn.innerHTML = `<i class="bi bi-bag-plus"></i> Add to Cart`;
+    }, 1200);
+
+    updateCartUI();
+    showToast(`${product.name} added to cart`);
+  }
+
+  // ── REMOVE FROM CART ──────────────────────────────────────────
+  function removeFromCart(id) {
+    delete cart[id];
+    updateCartUI();
+  }
+
+  // ── UPDATE CART UI ────────────────────────────────────────────
+  function updateCartUI() {
+    const items = Object.values(cart);
+    const total = items.reduce((sum, i) => sum + i.product.price * i.qty, 0);
+    const count = items.reduce((sum, i) => sum + i.qty, 0);
+
+    // Count badge
+    const badge = document.getElementById('cartCount');
+    badge.textContent = count;
+    badge.classList.add('pop');
+    setTimeout(() => badge.classList.remove('pop'), 200);
+
+    // Cart items
+    const container = document.getElementById('cartItems');
+    const footer = document.getElementById('cartFooter');
+
+    if (items.length === 0) {
+      container.innerHTML = `
+        <div class="cart-empty">
+          <i class="bi bi-bag-x"></i>
+          <div>Your cart is empty</div>
+        </div>`;
+      footer.style.setProperty('display', 'none', 'important');
+    } else {
+      container.innerHTML = items.map(({ product: p, qty }) => `
+        <div class="cart-item">
+          <div class="cart-item-image"><img src="${p.image}" alt="${p.name}"></div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${p.name}</div>
+            <div class="cart-item-price">KES ${(p.price * qty).toLocaleString()}</div>
+            <div class="cart-item-qty">Qty: ${qty} × KES ${p.price.toLocaleString()}</div>
+          </div>
+          <button class="remove-btn" onclick="removeFromCart(${p.id})" title="Remove">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      `).join('');
+      footer.style.removeProperty('display');
+      document.getElementById('cartTotal').textContent = `KES ${total.toLocaleString()}`;
+    }
+  }
+
+  // ── TOAST ──────────────────────────────────────────────────────
+  function showToast(msg) {
+    document.getElementById('toastMsg').textContent = msg;
+    const t = bootstrap.Toast.getOrCreateInstance(document.getElementById('addToast'), { delay: 2000 });
+    t.show();
+  }
+
+  // ── CHECKOUT (stub) ────────────────────────────────────────────
+  function checkout() {
+    const items = Object.values(cart);
+    if (!items.length) return;
+    alert(`Order placed!\n\n${items.map(i => `${i.product.name} × ${i.qty}`).join('\n')}\n\nTotal: KES ${items.reduce((s,i)=>s+i.product.price*i.qty,0).toLocaleString()}`);
+    cart = {};
+    updateCartUI();
+  }
+
+  // ── INIT ───────────────────────────────────────────────────────
+  renderProducts();
+  updateCartUI();
+</script>
+</body>
+</html>
